@@ -110,6 +110,13 @@ def transform3(Hmdlt, width_max, width_min, height_max, height_min, grid_w, grid
 
 
 def imagewarping(img1, img2, H, min_x, max_x, min_y, max_y, C1=None, C2=None):
+    """
+    将图像img2通过单应性变换矩阵H映射到与img1对齐的坐标系中,并生成变形后的图像及其掩码
+    """
+    if np.any(np.isnan(H)) or np.any(np.isinf(H)):
+        raise ValueError("H contains NaN or Inf values!")
+
+    warped_img1, warped_img2, warped_mask1, warped_mask2 = None, None, None, None
 
     out_width = int(round(max_x - min_x + 1))
     out_height = int(round(max_y - min_y + 1))
@@ -122,14 +129,28 @@ def imagewarping(img1, img2, H, min_x, max_x, min_y, max_y, C1=None, C2=None):
 
     if C1 != None and C2 != None:    # mdlt
         map_x, map_y = transform3(H, max_x, min_x, max_y, min_y, C1 - 1, C2 - 1)
-        warped_img2 = cv.remap(img2, map_x, map_y, interpolation=cv.INTER_LINEAR, borderMode=cv.BORDER_REFLECT)
 
     else:    # global
         map_x, map_y = transform(H, max_x, min_x, max_y, min_y)
-        warped_img2 = cv.remap(img2, map_x, map_y, interpolation=cv.INTER_LINEAR, borderMode=cv.BORDER_REFLECT)
 
+    # 检查映射坐标是否合理
+    max_map_x = np.max(map_x)
+    min_map_x = np.min(map_x)
+    max_map_y = np.max(map_y)
+    min_map_y = np.min(map_y)
+
+    if(max_map_x > 1.5*out_width  or min_map_x < (-1.5)*out_width or max_map_y > 1.5*out_height or min_map_y < (-1.5)*out_height):
+        return warped_img1, warped_img2, warped_mask1, warped_mask2
+    
+    warped_img2 = cv.remap(img2, map_x, map_y, interpolation=cv.INTER_LINEAR, borderMode=cv.BORDER_REFLECT)
     mask2 = np.ones((img2.shape[0], img2.shape[1]))
     warped_mask2 = cv.remap(mask2, map_x, map_y, interpolation=cv.INTER_LINEAR)
+
+    # cv.imshow('warped_img1', warped_img1)
+    # cv.imshow('warped_img2', warped_img2)
+    # cv.imshow('warped_mask1', warped_mask1)
+    # cv.imshow('warped_mask2', warped_mask2)
+    # cv.waitKey(0)
 
     return warped_img1, warped_img2, warped_mask1, warped_mask2
 

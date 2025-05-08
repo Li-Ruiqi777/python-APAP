@@ -2,6 +2,9 @@ import numpy as np
 
 
 def imageblending(warped_img1, warped_img2, w1, w2):
+    """
+    加权融合2个图
+    """
     mass = w1 + w2
     mass[mass == 0] = np.nan
 

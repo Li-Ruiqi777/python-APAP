@@ -18,12 +18,13 @@ def resize_image(img):
     return img
 
 ## Read images
-# img1 = cv.imread('images/DHW-temple/4.JPG')
-# img2 = cv.imread('images/DHW-temple/5.JPG')
-img1 = cv.imread('images/APAP-railtracks/P1010517.JPG')
-img2 = cv.imread('images/APAP-railtracks/P1010520.JPG')
+img1 = cv.imread('images/DHW-temple/4.JPG')
+img2 = cv.imread('images/DHW-temple/5.JPG')
+
 img1 = resize_image(img1)    # resize to avoid out of memory
 img2 = resize_image(img2)
+# img1 = cv.resize(img1, (512, 512))
+# img2 = cv.resize(img2, (512, 512))
 
 ## SIFT keypoint detection and matching
 t0 = time.time()

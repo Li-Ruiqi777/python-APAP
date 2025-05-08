@@ -91,6 +91,9 @@ def homography_res(H, x1, x2):
 
     # Calculate, in both directions, the transfered points
     Hx1 = np.dot(H, x1)
+    rank = np.linalg.matrix_rank(H)
+    # if rank != 3:
+    #     return None
     invHx2 = np.linalg.inv(H).dot(x2)
 
     x1 /= x1[2]
@@ -104,6 +107,7 @@ def homography_res(H, x1, x2):
 
 
 def get_hom_final_size(img1, img2, Hg):
+    # 将target image的坐标系变换到reference image的坐标系下
     box2 = np.array([[0, img2.shape[1] - 1, img2.shape[1] - 1,                 0],
                      [0,                 0, img2.shape[0] - 1, img2.shape[0] - 1],
                      [1,                 1,                 1,                 1]])
@@ -111,6 +115,7 @@ def get_hom_final_size(img1, img2, Hg):
     box2_[0, :] = box2_[0, :] / box2_[2, :]
     box2_[1, :] = box2_[1, :] / box2_[2, :]
 
+    # 输出域的坐标范围
     min_x = min(min(box2_[0, :]), 0)
     max_x = max(max(box2_[0, :]), img1.shape[1]-1)
     min_y = min(min(box2_[1, :]), 0)

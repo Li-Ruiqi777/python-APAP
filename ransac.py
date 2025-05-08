@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from homography import homography_fit, homography_res
-import utils
+import apap_utils
 import cv2 as cv
 
 random.seed(0)
@@ -15,18 +15,22 @@ class RANSAC:
         self.visual = visual
 
     def __call__(self, img1, img2, src, dst):
-        res = self.sampling(src, dst)
-        con = sum(res <= self.thr)
-        maxinx = np.argmax(con)
-        matchesMask = (res[:, maxinx] <= self.thr) + 0
-        inliers = np.nonzero(matchesMask)[0]
+        try:
+            res = self.sampling(src, dst)
+            con = sum(res <= self.thr)
+            maxinx = np.argmax(con)
+            matchesMask = (res[:, maxinx] <= self.thr) + 0
+            inliers = np.nonzero(matchesMask)[0]
 
-        if self.visual:
-            img3 = utils.cv_draw_matches(img1, img2, src, dst, inliers)
-            cv.imshow("ransac's result", img3)
-            cv.waitKey(1)
+            if self.visual:
+                img3 = apap_utils.cv_draw_matches(img1, img2, src, dst, inliers)
+                cv.imshow("ransac's result", img3)
+                cv.waitKey(1)
 
-        return src[:, inliers], dst[:, inliers]
+            return src[:, inliers], dst[:, inliers]
+        except Exception as e:
+            print(e)
+            return None, None
 
     def sampling(self, src, dst):
         n = src.shape[1]
@@ -40,6 +44,8 @@ class RANSAC:
             st = homography_fit(psub1, psub2)
 
             ds = homography_res(st, src, dst)
+            if ds is None:
+                raise Exception("RANSAC: homography estimation failed")
 
             res[:, m] = ds
 
