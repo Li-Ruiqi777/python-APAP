@@ -47,7 +47,8 @@ def quantitative_analysis(args):
         try:
             warped_ref_img, warped_target_img, overlap_mask = compute_homography_APAP(inpu1_np, inpu2_np)
         except:
-            continue
+            logger.exception("comsg=mpute_homography_APAP Error")
+            warped_ref_img, warped_target_img, overlap_mask = inpu1_np, inpu2_np, np.ones_like(inpu1_np)
 
         # 计算PSNR/SSIM
         psnr = skimage.metrics.peak_signal_noise_ratio(

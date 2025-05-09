@@ -6,6 +6,9 @@ from apap import APAP_stitching, get_mdlt_final_size
 from imagewarping import imagewarping
 import config
 
+from utils.logger_config import *
+logger = logging.getLogger(__name__)
+
 def compute_homography_APAP(ref_img, tar_img, visualize=False):
     """
     计算从目标图像到参考图像的单应性矩阵H (使用SIFT特征)
@@ -34,8 +37,8 @@ def compute_homography_APAP(ref_img, tar_img, visualize=False):
     try:
         src_fine, dst_fine = ransac(ref_img, tar_img, src_orig, dst_orig)
     except Exception as e:
-        print(f"RANSAC failed: {e}")
-        return ref_img, tar_img, np.zeros((ref_img.shape[0], ref_img.shape[1], 3))
+        logger.info(f"RANSAC failed: {e}")
+        return ref_img, tar_img, np.ones_like(ref_img)
     src_fine, dst_fine = ransac(ref_img, tar_img, src_orig, dst_orig)
 
     ##########################
@@ -55,11 +58,11 @@ def compute_homography_APAP(ref_img, tar_img, visualize=False):
     min_x, max_x, min_y, max_y = get_mdlt_final_size(ref_img, tar_img, Hmdlt, config.C1, config.C2)
     limit = 2500
     if min_x<(-limit) or max_x > limit or min_y<(-limit) or max_y > limit:
-        return ref_img, tar_img, np.zeros((ref_img.shape[0], ref_img.shape[1], 3))
+        return ref_img, tar_img, np.ones_like(ref_img)
     warped_ref_img, warped_tar_img, warped_ref_mask, warped_tar_mask = imagewarping(ref_img, tar_img, Hmdlt, min_x, max_x, min_y, max_y,
                                                                         config.C1, config.C2)
-    if warped_ref_img is None:
-        return ref_img, tar_img, np.zeros((ref_img.shape[0], ref_img.shape[1], 3))
+    if warped_ref_img is None or warped_tar_img is None or warped_ref_mask is None or warped_tar_mask is None:
+        return ref_img, tar_img, np.ones_like(ref_img)
     
     # linear_mdlt = imageblending(warped_ref_img, warped_tar_img, warped_ref_mask, warped_tar_mask)
     warped_tar_mask = np.stack([warped_tar_mask] * 3, axis=-1)/255

@@ -62,6 +62,14 @@ def generate_A(xs1, xs2):
 
 
 def homography_fit(x1, x2):
+    # 检查输入是否包含非法值
+    if np.any(~np.isfinite(x1)) or np.any(~np.isfinite(x2)):
+        return np.eye(3)  # 返回单位矩阵作为无效标记
+    
+    # 检查点是否重合（避免标准差为零）
+    if np.allclose(x1, x1[:, [0]], atol=1e-6) or np.allclose(x2, x2[:, [0]], atol=1e-6):
+        return np.eye(3)
+    
     nf1, N1 = normalise2dpts(x1)
     nf2, N2 = normalise2dpts(x2)
     # condition points
@@ -91,10 +99,19 @@ def homography_res(H, x1, x2):
 
     # Calculate, in both directions, the transfered points
     Hx1 = np.dot(H, x1)
-    rank = np.linalg.matrix_rank(H)
-    # if rank != 3:
-    #     return None
+    if np.linalg.matrix_rank(H) != 3:
+        return 1e10
+        # raise ValueError("The homography is singular")
+
     invHx2 = np.linalg.inv(H).dot(x2)
+
+    # 检查齐次坐标的第三个分量是否为零或接近零
+    z1 = Hx1[2]
+    z2 = invHx2[2]
+    
+    # 如果分量太小，返回极大误差（跳过该模型）
+    if np.any(np.abs(z1) < 1e-10) or np.any(np.abs(z2) < 1e-10):
+        return 1e10
 
     x1 /= x1[2]
     x2 /= x2[2]

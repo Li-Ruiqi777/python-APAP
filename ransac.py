@@ -15,22 +15,19 @@ class RANSAC:
         self.visual = visual
 
     def __call__(self, img1, img2, src, dst):
-        try:
-            res = self.sampling(src, dst)
-            con = sum(res <= self.thr)
-            maxinx = np.argmax(con)
-            matchesMask = (res[:, maxinx] <= self.thr) + 0
-            inliers = np.nonzero(matchesMask)[0]
+        res = self.sampling(src, dst)
+        con = sum(res <= self.thr)
+        maxinx = np.argmax(con)
+        matchesMask = (res[:, maxinx] <= self.thr) + 0
+        inliers = np.nonzero(matchesMask)[0]
 
-            if self.visual:
-                img3 = apap_utils.cv_draw_matches(img1, img2, src, dst, inliers)
-                cv.imshow("ransac's result", img3)
-                cv.waitKey(1)
+        if self.visual:
+            img3 = apap_utils.cv_draw_matches(img1, img2, src, dst, inliers)
+            cv.imshow("ransac's result", img3)
+            cv.waitKey(1)
 
-            return src[:, inliers], dst[:, inliers]
-        except Exception as e:
-            print(e)
-            return None, None
+        return src[:, inliers], dst[:, inliers]
+
 
     def sampling(self, src, dst):
         n = src.shape[1]
@@ -44,8 +41,6 @@ class RANSAC:
             st = homography_fit(psub1, psub2)
 
             ds = homography_res(st, src, dst)
-            if ds is None:
-                raise Exception("RANSAC: homography estimation failed")
 
             res[:, m] = ds
 
